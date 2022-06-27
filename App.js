@@ -6,106 +6,133 @@
  * @flow strict-local
  */
 
-import React from 'react';
-import type {Node} from 'react';
+import React, { Component } from 'react';
 import {
+  Modal,
   SafeAreaView,
-  ScrollView,
-  StatusBar,
+  Platform,
   StyleSheet,
   Text,
-  useColorScheme,
+  FlatList,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const API_URL = 'https://reqres.in/api/users';
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
+const listViewItemSeparator = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <View
+      style={{
+        height: 1,
+        width: '100%',
+        backgroundColor: '#000'
+      }}
+    />
   );
 };
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+class App extends Component {
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoading: true,
+      items: []
+    }
+  }
+
+  componentDidMount() {
+
+    return fetch(API_URL, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+
+      }
+
+    }).then((response) => response.json())
+      .then((responseJson) => {
+
+        this.setState({
+          items: responseJson.data,
+          isLoading: false,
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
+
+  render() {
+
+    return (
+
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+
+
+          <FlatList
+            data={this.state.items}
+            ItemSeparatorComponent={listViewItemSeparator}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) =>
+              <View key={item.id} style={{ padding: 20 }}>
+                <TouchableOpacity>
+                  <Text style={styles.itemsStyle}> Id: {item.id} </Text>
+                  <Text style={styles.itemsStyle}> Email: {item.email} </Text>
+                  <Text style={styles.itemsStyle}> First Name: {item.first_name} </Text>
+                  <Text style={styles.itemsStyle}> Last Name: {item.last_name} </Text>
+
+                </TouchableOpacity>
+              </View>
+            }
+          />
+
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+
+
+      </SafeAreaView>
+
+    );
+  }
+}
+
+const CustomProgressBar = ({ visible }) => (
+  <Modal onRequestClose={() => null} visible={visible}>
+    <View style={styles.ModalOuterView}>
+      <View style={styles.ModalInnerView}>
+        <Text style={{ fontSize: 20, fontWeight: '200' }}>Connecting...</Text>
+        <ActivityIndicator size="large" />
+      </View>
+    </View>
+  </Modal>
+);
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  ItemsContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: (Platform.OS === 'ios') ? 20 : 0
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  ModalOuterView: {
+    flex: 1,
+    backgroundColor: '#dcdcdc',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  ModalInnerView: {
+    borderRadius: 10,
+    backgroundColor: 'white',
+    padding: 25
   },
-  highlight: {
-    fontWeight: '700',
+  itemsStyle: {
+    fontSize: 22,
+    color: '#000'
   },
 });
 
